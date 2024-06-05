@@ -1,25 +1,35 @@
 use std::net::{TcpListener, TcpStream};
-use std::io::{Read};
+use std::io::{BufReader, BufRead};
 use std::sync::{Arc, Mutex};
 use std::thread;
+use serde_json;
 
-fn handle_client(mut stream: TcpStream, _averages: Arc<Mutex<Vec<f64>>>) {
-    let mut buffer = [0; 100000];
+mod singnature;
+mod serializers;
+
+
+fn handle_client(stream: TcpStream, _averages: Arc<Mutex<Vec<f64>>>) {
+
+    let reader: BufReader<TcpStream> = BufReader::new(stream);
     let mut prices: Vec<f64> = Vec::new();
 
-    match stream.read(&mut buffer) {
-        Ok(bytes_read) => {
-            let json = String::from_utf8_lossy(&buffer[..bytes_read]).trim().to_string();
-            let mut new_prices: Vec<f64> = serde_json::from_str(&json).unwrap();
-            prices.append(&mut new_prices);
+    for line in reader.lines() {
+        let line = line.unwrap();
+
+        let mut signed_message: serializers::SignedMessage = serde_json::from_str(&line).unwrap();
+        let serialized_message = serde_json::to_string(&signed_message.message).unwrap();
+
+        let is_verified: bool= singnature::SignatureManager::verify(&signed_message.public_key, &serialized_message.as_bytes(), &signed_message.signature);
+
+        if is_verified{
+            prices.append(&mut signed_message.message);
             let average_price: f64 = prices.iter().sum::<f64>() / prices.len() as f64;
             println!("new average price: {}", average_price);
-
-        }
-        Err(e) => {
-            println!("Failed to read from stream: {}", e);
+        } else {
+            eprintln!("Signature verification failed");
         }
     }
+
 }
 
 fn main() {
