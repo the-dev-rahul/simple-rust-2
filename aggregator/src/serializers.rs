@@ -2,16 +2,16 @@ use serde::{Serialize, Deserialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct SignedMessage {
-    pub message: Vec<f64>,
+    pub data: Vec<f64>,
     pub signature: Vec<u8>,
     pub public_key: Vec<u8>,
 }
 
 
 impl SignedMessage{
-    pub fn _new( message: Vec<f64>, signature: Vec<u8>, public_key: Vec<u8> )-> SignedMessage{
+    pub fn _new( data: Vec<f64>, signature: Vec<u8>, public_key: Vec<u8> )-> SignedMessage{
         SignedMessage{
-            message: message,
+            data: data,
             signature: signature,
             public_key: public_key
         }
