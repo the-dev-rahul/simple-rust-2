@@ -1,13 +1,12 @@
 use std::net::{TcpListener, TcpStream};
 use std::io::{BufReader, BufRead};
-use std::sync::{Arc, Mutex};
 use serde_json;
 
 mod singnature;
 mod serializers;
 
 
-fn handle_client(prices: &mut Vec<f64>,stream: TcpStream, _averages: Arc<Mutex<Vec<f64>>>) {
+fn handle_client(prices: &mut Vec<f64>,stream: TcpStream) {
 
     let reader: BufReader<TcpStream> = BufReader::new(stream);
 
@@ -32,12 +31,10 @@ fn handle_client(prices: &mut Vec<f64>,stream: TcpStream, _averages: Arc<Mutex<V
 
 fn main() {
     let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
-    let averages = Arc::new(Mutex::new(Vec::new()));
     let mut prices: Vec<f64> = Vec::new();
 
     for stream in listener.incoming() {
         let stream = stream.unwrap();
-        let averages = Arc::clone(&averages);
-        handle_client(&mut prices, stream, averages);
+        handle_client(&mut prices, stream);
     }
 }
