@@ -10,7 +10,7 @@ use tokio::runtime::Runtime;
 mod singnature;
 mod serializers;
 
-async fn fetch_and_compute_average(stream: &mut TcpStream) {
+async fn fetch_and_send_to_aggregator(stream: &mut TcpStream) {
 
     let times: u64 = 10;
     let url = Url::parse("wss://stream.binance.com:9443/ws/btcusdt@trade").unwrap();
@@ -71,7 +71,7 @@ fn main() {
 
         match TcpStream::connect("127.0.0.1:7878") {
             Ok(mut stream) => {
-                fetch_and_compute_average(&mut stream).await;
+                fetch_and_send_to_aggregator(&mut stream).await;
             }
             Err(e) => {
                 eprintln!("Failed to connect to aggregator: {}", e);
